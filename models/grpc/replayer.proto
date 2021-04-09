@@ -1,0 +1,124 @@
+syntax = "proto3";
+package models.grpc;
+option go_package = "github.com/bptlab/cepta/models/grpc/replayer";
+option java_package = "org.bptlab.cepta.models.grpc.replayer";
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+import "models/constants/Topic.proto";
+import "models/events/Event.proto";
+import "models/internal/types/result.proto";
+
+service Replayer {
+
+  // Basic controls
+  rpc SeekTo(google.protobuf.Timestamp) returns (models.internal.types.Empty) {}
+  rpc Reset(models.internal.types.Empty) returns (models.internal.types.Empty) {}
+  rpc Start(ReplayStartOptions) returns (models.internal.types.Empty) {}
+  rpc Stop(models.internal.types.Empty) returns (models.internal.types.Empty) {}
+
+  // Configuration
+  rpc SetSpeed(Speed) returns (models.internal.types.Empty) {}
+  rpc SetType(ReplayModeOption) returns (models.internal.types.Empty) {}
+  rpc SetOptions(ReplaySetOptionsRequest) returns (models.internal.types.Empty) {}
+
+  // Query
+  rpc GetStatus(models.internal.types.Empty) returns (ReplayStatus) {}
+  rpc GetOptions(models.internal.types.Empty) returns (ReplayStartOptions) {}
+
+  // Custom querying for internal testing infrastructure
+  rpc Query(QueryOptions) returns (stream ReplayedEvent) {}
+}
+
+enum InternalControlMessageType {
+  RESET = 0;
+  SEEK = 1;
+  SHUTDOWN = 2;
+  START = 3;
+  STOP = 4;
+}
+
+enum ReplayMode {
+  // Proportional is default
+  PROPORTIONAL = 0;
+  CONSTANT = 1;
+}
+
+message ReplayModeOption {
+  ReplayMode mode = 1;
+}
+
+message Speed {
+  int32 speed = 1;
+}
+
+message ReplayStatus {
+  bool active = 1;
+}
+
+message Timerange {
+  google.protobuf.Timestamp start = 1;
+  google.protobuf.Timestamp end = 2;
+}
+
+message ActiveReplayOptions {
+  models.constants.Topic source = 1; // For mapping
+  Speed speed = 2;
+  ReplayMode mode = 3;
+  Timerange timerange = 4;
+  google.protobuf.BoolValue repeat = 5;
+}
+
+message ReplayOptions {
+  Speed speed = 1;
+  ReplayMode mode = 2;
+  Timerange timerange = 3;
+  int32 limit = 5;
+  int32 offset = 6;
+  google.protobuf.BoolValue repeat = 7;
+  /*
+  // Possible refactoring: Combine replay and query options here
+  oneof options {
+    string name = 4;
+    SubMessage sub_message = 9;
+  }
+  */
+}
+
+message SourceQueryOptions {
+  Timerange timerange = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message ReplaySetOptionsRequest {
+  repeated ActiveReplayOptions sources = 1;
+  ActiveReplayOptions options = 2;
+}
+
+message SourceQuery {
+  models.constants.Topic source = 1;  // For mapping
+  repeated string ids = 2;
+  SourceQueryOptions options = 3;
+}
+
+message SourceReplay {
+  models.constants.Topic source = 1;  // For mapping
+  repeated string ids = 2;
+  ReplayOptions options = 3;
+}
+
+message ReplayStartOptions {
+  repeated SourceReplay sources = 1;
+  ReplayOptions options = 2;
+}
+
+message QueryOptions {
+  repeated SourceQuery sources = 1;
+  bool sort = 4;
+}
+
+message ReplayedEvent {
+  google.protobuf.Timestamp replay_timestamp = 1;
+  models.events.Event event = 2;
+};

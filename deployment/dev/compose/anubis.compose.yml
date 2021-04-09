@@ -1,0 +1,12 @@
+version: "3.6"
+services:
+  anubis:
+    build:
+      dockerfile: $PWD/../../../anubis/Dockerfile
+      context: $PWD/../../../
+      args:
+        MONITORING_URL: http://localhost:${CEPTA_GRAFANA_PORT}
+    expose:
+      - 80
+    ports:
+      - ${CEPTA_WEBUI_FRONTEND_PORT}:80

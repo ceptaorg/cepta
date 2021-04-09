@@ -1,0 +1,20 @@
+version: "3.6"
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.14.1
+    ports:
+      - ${CEPTA_ENVOY_ADMIN_PORT}:9901
+      - ${CEPTA_ENVOY_INGRESS_PORT}:80
+      - ${CEPTA_ENVOY_GRPC_PORT}:81
+    environment:
+      ENVOY_HOST: ${ENVOY_HOST}
+    network_mode: ${ENVOY_NETWORK_MODE}
+    volumes:
+      - ../../keys/sample/auth.jwk.json:/etc/envoy/jwks/jwks.json
+      - ../envoy.yaml:/etc/envoy/envoy.yaml.tmpl:ro
+      - ../prepare-envoy.sh:/prepare.sh:ro
+    entrypoint: ["bin/sh", "/prepare.sh"]
+    env_file: .env
+    command:
+      - envoy
+      - -c /etc/envoy/envoy.yaml

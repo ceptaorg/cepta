@@ -1,0 +1,42 @@
+version: "3.6"
+services:
+    mongodb:
+        image: "mongo"
+        volumes:
+            - mongodb_data:/data/db
+        expose:
+            - ${CEPTA_MONGODB_PORT}
+        command: mongod --port ${CEPTA_MONGODB_PORT}
+        ports:
+            - ${CEPTA_MONGODB_PORT}:${CEPTA_MONGODB_PORT}
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: example
+        logging:
+            # Disable logging
+            driver: none
+        # Normally, deploy requires docker swarm, but we are running in compat
+        deploy:
+            resources:
+                limits:
+                    memory: 20gb
+                reservations:
+                    memory: 500m
+
+    mongoclient:
+        image: "mongoclient/mongoclient"
+        expose:
+            - 3000
+        ports:
+            - ${CEPTA_MONGOCLIENT_PORT}:3000
+       #  environment:
+            # mongodb://db1.example.net,db2.example.net:2500/?replicaSet=test&connectTimeoutMS=300000
+            # MONGO_URL: mongodb://root:example@mongodb:27017/?connectTimeoutMS=30000
+            # MONGO_URL: mongodb://root:example@mongodb:27017/admin?connectTimeoutMS=30000
+        #logging:
+            # Disable logging
+            # driver: none
+
+volumes:
+    mongodb_data:
+        driver: local
